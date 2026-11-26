@@ -19,7 +19,7 @@
   <img alt="Local first" src="https://img.shields.io/badge/data-local--first-4c9aff">
 </p>
 
-Tracker Hub brings together **Sauce Tracker**, **Stock Tracker**, **Book Tracker**, **Map Tracker**, and **Caffeine Tracker** alongside fast, native daily and cumulative counters. Everything stays on your device with zero internet permission, zero ads, and no account required.
+Tracker Hub brings together **Sauce Tracker**, **Stock Tracker**, **Book Tracker**, **Map Tracker**, and **Caffeine Tracker** alongside fast, native daily and cumulative counters. All counter data, history, and backups stay on your device with zero ads, zero tracking, and no account required.
 
 ## Screenshots
 
@@ -34,7 +34,7 @@ Tracker Hub 1.0 on a real device.
 
 ## Features
 
-- **Unified tracker hub:** Detects installed companion apps (Sauce Tracker, Stock Tracker, Book Tracker, Map Tracker, Caffeine Tracker) so you can open them directly or jump to their GitHub releases.
+- **Unified tracker hub:** Detects installed companion apps (Sauce Tracker, Stock Tracker, Book Tracker, Map Tracker, Caffeine Tracker), checks GitHub releases for newer versions, and shows an inline **Update** button side-by-side with **Open** when an update is available.
 - **Native counters:** Create unlimited named counters in **Daily reset** mode (resets to 0 at midnight while keeping full history and totals) or **Cumulative** mode (counts continuously across days).
 - **Flexible home screen widgets:** Clean adaptive layouts for 1 × 1, 2 × 1, 1 × 2, and 2 × 2+ with rounded `+` buttons, instant background updates, yesterday/today context, accent color palettes, and **optional custom image backgrounds** (automatically cropped, rounded, and scrimmed for readability).
 - **Scrollable statistics page:** Tap the 14-day chart to open full statistics with horizontally scrollable charts by **Day**, **Week** (ISO Mon–Sun), **Month**, **Year**, and **All time**, plus averages, streaks, personal records, and weekday breakdown.
@@ -79,7 +79,7 @@ For custom release signing in CI or locally, set `KEYSTORE_PATH`, `KEYSTORE_PASS
 
 ## Backups and privacy
 
-- **Zero internet permission:** Tracker Hub does not request `INTERNET` and contains no analytics, ads, or cloud tracking.
+- **Local-first privacy:** Counters, history, settings, and backups stay strictly on your device with zero analytics, ads, or accounts. Network access is only used to check GitHub's latest release tags for companion apps.
 - **Atomic local storage:** Counter state is written via `.tmp` → `.bak` → atomic rename with automatic `.bak` fallback recovery.
 - **Portable backups:** Native `.json` backups are plain UTF-8 files you can store anywhere; imports always validate and preview changes before applying.
 

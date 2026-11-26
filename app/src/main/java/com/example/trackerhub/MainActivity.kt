@@ -92,7 +92,12 @@ import com.example.trackerhub.ui.settings.BackupErrorDialog
 import com.example.trackerhub.ui.settings.ImportPreviewDialog
 import com.example.trackerhub.ui.settings.SettingsCategory
 import com.example.trackerhub.ui.settings.SettingsScreen
+import com.example.trackerhub.updates.AppReleaseInfo
+import com.example.trackerhub.updates.AppUpdateChecker
 import com.example.trackerhub.widget.CounterWidgetProvider
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import java.io.File
 import java.util.concurrent.Executors
@@ -510,8 +515,29 @@ private fun TrackerHubApp(
 private fun TrackerHubScreen(resumeTick: Int) {
     val context = LocalContext.current
     var selectedIndex by rememberSaveable { mutableIntStateOf(-1) }
+    val installedVersions = remember(resumeTick) {
+        trackerApps.associateWith { app -> context.findInstalledVersion(app) }
+    }
     val installStates = remember(resumeTick) {
         trackerApps.associateWith { app -> context.findLaunchIntent(app) != null }
+    }
+    var latestReleases by remember { mutableStateOf<Map<String, AppReleaseInfo>>(emptyMap()) }
+
+    LaunchedEffect(Unit) {
+        val fetched = coroutineScope {
+            trackerApps
+                .filter { it.githubUrl != null }
+                .map { app ->
+                    async {
+                        val release = AppUpdateChecker.fetchLatestRelease(app.githubUrl!!)
+                        if (release != null) app.name to release else null
+                    }
+                }
+                .awaitAll()
+                .filterNotNull()
+                .toMap()
+        }
+        latestReleases = fetched
     }
 
     LazyColumn(
@@ -526,13 +552,32 @@ private fun TrackerHubScreen(resumeTick: Int) {
 
         trackerApps.forEachIndexed { index, app ->
             item(key = app.name) {
+                val installed = installStates[app] == true
+                val installedVersion = installedVersions[app]
+                val latestRelease = latestReleases[app.name]
+                val availableUpdate = if (
+                    installed &&
+                    latestRelease != null &&
+                    AppUpdateChecker.isNewerVersion(installedVersion, latestRelease.latestTag)
+                ) {
+                    latestRelease
+                } else {
+                    null
+                }
                 Column {
                     TrackerCompactCard(
                         app = app,
-                        installed = installStates[app] == true,
+                        installed = installed,
+                        installedVersion = installedVersion,
+                        availableUpdate = availableUpdate,
                         selected = selectedIndex == index,
                         onSelect = { selectedIndex = if (selectedIndex == index) -1 else index },
-                        onPrimary = { openOrInstall(context, app) }
+                        onPrimary = { openOrInstall(context, app) },
+                        onUpdate = {
+                            val url = availableUpdate?.releaseUrl
+                                ?: app.githubUrl?.let { "$it/releases/latest" }
+                            if (url != null) openLink(context, url)
+                        }
                     )
                     AnimatedVisibility(
                         visible = selectedIndex == index,
@@ -561,9 +606,12 @@ private fun TrackerHubScreen(resumeTick: Int) {
 private fun TrackerCompactCard(
     app: TrackerAppInfo,
     installed: Boolean,
+    installedVersion: String?,
+    availableUpdate: AppReleaseInfo?,
     selected: Boolean,
     onSelect: () -> Unit,
-    onPrimary: () -> Unit
+    onPrimary: () -> Unit,
+    onUpdate: () -> Unit
 ) {
     val selectedProgress by animateFloatAsState(
         targetValue = if (selected) 1f else 0f,
@@ -583,31 +631,80 @@ private fun TrackerCompactCard(
         border = BorderStroke(1.dp, borderColor),
         shape = RoundedCornerShape(24.dp)
     ) {
-        Row(
-            modifier = Modifier.padding(14.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            AppMark(app = app, size = 44)
-            Spacer(modifier = Modifier.width(12.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(app.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                Text(
-                    text = if (LocalIsSwedish.current) app.summary else app.summaryEn,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-            Spacer(modifier = Modifier.width(8.dp))
-            OutlinedButton(onClick = onPrimary) {
-                Text(
-                    when {
-                        installed -> tr("Öppna", "Open")
-                        app.githubUrl != null -> tr("Hämta", "Get")
-                        else -> tr("Installera", "Install")
+        Column(modifier = Modifier.padding(14.dp)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                AppMark(app = app, size = 44)
+                Spacer(modifier = Modifier.width(12.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = app.name,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f, fill = false)
+                        )
+                        if (availableUpdate != null) {
+                            val badge = if (!installedVersion.isNullOrBlank()) {
+                                "${installedVersion.removePrefix("v")} → ${availableUpdate.displayVersion}"
+                            } else {
+                                "v${availableUpdate.displayVersion}"
+                            }
+                            Text(
+                                text = badge,
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.primary,
+                                maxLines = 1
+                            )
+                        }
                     }
-                )
+                    Text(
+                        text = if (LocalIsSwedish.current) app.summary else app.summaryEn,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+                if (availableUpdate == null) {
+                    Spacer(modifier = Modifier.width(8.dp))
+                    OutlinedButton(onClick = onPrimary) {
+                        Text(
+                            when {
+                                installed -> tr("Öppna", "Open")
+                                app.githubUrl != null -> tr("Hämta", "Get")
+                                else -> tr("Installera", "Install")
+                            }
+                        )
+                    }
+                }
+            }
+            if (availableUpdate != null) {
+                Spacer(modifier = Modifier.height(10.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Button(
+                        onClick = onUpdate,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(tr("Uppdatera", "Update"))
+                    }
+                    OutlinedButton(
+                        onClick = onPrimary,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(tr("Öppna", "Open"))
+                    }
+                }
             }
         }
     }
@@ -724,6 +821,15 @@ private fun Context.findLaunchIntent(app: TrackerAppInfo): Intent? {
         packageManager.getLaunchIntentForPackage(packageName)?.apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
+    }
+}
+
+@Suppress("DEPRECATION")
+private fun Context.findInstalledVersion(app: TrackerAppInfo): String? {
+    return app.packageCandidates.firstNotNullOfOrNull { packageName ->
+        runCatching {
+            packageManager.getPackageInfo(packageName, 0).versionName?.takeIf { it.isNotBlank() }
+        }.getOrNull()
     }
 }
 
