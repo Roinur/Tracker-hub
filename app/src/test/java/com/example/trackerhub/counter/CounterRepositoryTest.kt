@@ -102,10 +102,38 @@ class CounterRepositoryTest {
         assertEquals(2, reloaded.primaryDisplayValue(repo2.currentDate()))
         assertEquals(water.id, repo2.getBoundCounterId(42))
 
-        // Corrupt/remove main file and ensure .bak restores previous valid state
+        // Delete main file and ensure .bak restores previous valid state
         storeFile.delete()
         val repo3 = CounterRepository(storage = AtomicFileCounterStorage(storeFile), clockProvider = { currentClock })
         assertNotNull(repo3.currentSnapshot().counterById(water.id))
+    }
+
+    @Test
+    fun atomicFileStorageRecoversFromCorruptNonEmptyMainFileUsingBackup() {
+        val storeFile = File(tempFolder.root, "counters_store_corrupt_test.json")
+        val backupFile = File(tempFolder.root, "counters_store_corrupt_test.json.bak")
+        val clock = fixedClock("2026-11-25T10:00:00Z")
+        val repo1 = CounterRepository(storage = AtomicFileCounterStorage(storeFile), clockProvider = { clock })
+
+        val coffee = repo1.createCounter("Kaffe", CounterMode.DAILY_RESET)
+        repo1.adjustCounter(coffee.id, +1)
+        repo1.adjustCounter(coffee.id, +1)
+        repo1.bindWidget(99, coffee.id)
+        assertTrue(backupFile.exists())
+
+        // Corrupt main file with non-empty broken JSON while valid .bak exists
+        storeFile.writeText("{\"schemaVersion\":2,\"counters\":[{\"id\":\"broken", Charsets.UTF_8)
+
+        val repo2 = CounterRepository(storage = AtomicFileCounterStorage(storeFile), clockProvider = { clock })
+        val restored = repo2.currentSnapshot().counterById(coffee.id)
+        assertNotNull(restored)
+        assertEquals("Kaffe", restored!!.name)
+        assertTrue(restored.primaryDisplayValue(repo2.currentDate()) >= 1)
+
+        // Subsequent write must heal the main file without overwriting .bak with corrupt JSON
+        repo2.adjustCounter(coffee.id, +1)
+        assertNotNull(CounterJsonCodec.decodeOrNull(storeFile.readText(Charsets.UTF_8)))
+        assertNotNull(CounterJsonCodec.decodeOrNull(backupFile.readText(Charsets.UTF_8)))
     }
 
     @Test

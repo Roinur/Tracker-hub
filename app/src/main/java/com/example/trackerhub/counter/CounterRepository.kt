@@ -14,6 +14,7 @@ import java.util.UUID
 
 interface CounterStorage {
     fun readRaw(): String?
+    fun readBackupRaw(): String? = null
     fun writeRaw(payload: String)
 }
 
@@ -24,13 +25,17 @@ class AtomicFileCounterStorage(
     private val tempFile = File(file.parentFile, "${file.name}.tmp")
 
     override fun readRaw(): String? {
-        return readFileIfValid(file) ?: readFileIfValid(backupFile)
+        return readFileIfValidJson(file) ?: readFileIfValidJson(backupFile)
+    }
+
+    override fun readBackupRaw(): String? {
+        return readFileIfValidJson(backupFile)
     }
 
     override fun writeRaw(payload: String) {
         file.parentFile?.mkdirs()
         tempFile.writeText(payload, Charsets.UTF_8)
-        if (file.exists()) {
+        if (readFileIfValidJson(file) != null) {
             try {
                 file.copyTo(backupFile, overwrite = true)
             } catch (_: IOException) {
@@ -43,10 +48,11 @@ class AtomicFileCounterStorage(
         }
     }
 
-    private fun readFileIfValid(target: File): String? {
+    private fun readFileIfValidJson(target: File): String? {
         if (!target.exists() || target.length() == 0L) return null
         return try {
-            target.readText(Charsets.UTF_8).takeIf { it.isNotBlank() }
+            val text = target.readText(Charsets.UTF_8)
+            if (text.isBlank() || CounterJsonCodec.decodeOrNull(text) == null) null else text
         } catch (_: IOException) {
             null
         }
@@ -586,8 +592,15 @@ class CounterRepository(
     }
 
     private fun loadFromStorage(): CounterStoreState {
-        val raw = storage.readRaw() ?: return CounterStoreState()
-        return CounterJsonCodec.decode(raw)
+        val primaryRaw = storage.readRaw()
+        if (primaryRaw != null) {
+            CounterJsonCodec.decodeOrNull(primaryRaw)?.let { return it }
+        }
+        val backupRaw = storage.readBackupRaw()
+        if (backupRaw != null) {
+            CounterJsonCodec.decodeOrNull(backupRaw)?.let { return it }
+        }
+        return CounterStoreState()
     }
 
     private fun commitLocked(newState: CounterStoreState) {

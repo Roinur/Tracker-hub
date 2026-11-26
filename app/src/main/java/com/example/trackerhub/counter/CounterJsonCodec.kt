@@ -32,9 +32,11 @@ object CounterJsonCodec {
         return sb.toString()
     }
 
-    fun decode(json: String): CounterStoreState {
-        if (json.isBlank()) return CounterStoreState()
-        val parsed = JsonParser(json).parseRootObject() ?: return CounterStoreState()
+    fun decode(json: String): CounterStoreState = decodeOrNull(json) ?: CounterStoreState()
+
+    fun decodeOrNull(json: String): CounterStoreState? {
+        if (json.isBlank()) return null
+        val parsed = JsonParser(json).parseRootObject() ?: return null
         val schemaVersion = (parsed["schemaVersion"] as? Number)?.toInt()
             ?: CounterStoreState.CURRENT_SCHEMA_VERSION
         val lastObservedDate = parsed["lastObservedDate"] as? String
