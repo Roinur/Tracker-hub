@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Tracker Hub</string>
+    <string name="counter_widget_label">Räknare</string>
+    <string name="counter_widget_yesterday">Igår %1$d</string>
+    <string name="counter_widget_yesterday_preview">Igår 3</string>
+    <string name="counter_widget_description">Enkel namngiven räknare med +1 och -1, daglig nollställning eller kumulativ total.</string>
+    <string name="counter_widget_configure_title">Konfigurera räknare</string>
+    <string name="counter_widget_minus_cd">Minska med 1</string>
+    <string name="counter_widget_plus_cd">Öka med 1</string>
+    <string name="counter_widget_choose_prompt">Tryck för att välja</string>
+    <string name="counter_widget_preview_title">Kaffe</string>
+</resources>

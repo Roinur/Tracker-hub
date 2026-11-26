@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <ImageView
+        android:id="@+id/widget_surface_tint"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:src="@drawable/widget_material_surface"
+        android:scaleType="fitXY"
+        android:importantForAccessibility="no" />
+
+    <LinearLayout
+        android:id="@+id/widget_configured_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
+        android:gravity="center_vertical">
+        <LinearLayout
+            android:id="@+id/widget_details"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:gravity="center_vertical"
+            android:layout_weight="1.25">
+            <TextView
+                android:id="@+id/widget_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="2dp"
+                android:textSize="13sp"
+                android:includeFontPadding="false"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:singleLine="true"
+                android:text="@string/counter_widget_label"
+                android:textColor="@color/widget_text_primary"
+                android:fontFamily="sans-serif-medium"
+                android:gravity="start" />
+
+            <TextView
+                android:id="@+id/widget_subvalue"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="11sp"
+                android:includeFontPadding="false"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:singleLine="true"
+                android:gravity="start"
+                android:textColor="@color/widget_text_secondary"
+                android:visibility="gone" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/widget_value"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="0.75"
+            android:textSize="26sp"
+            android:includeFontPadding="false"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:gravity="center"
+            android:fontFamily="sans-serif"
+            android:textStyle="bold"
+            android:text="0"
+            android:textColor="@color/widget_text_primary"
+            android:autoSizeTextType="uniform"
+            android:autoSizeMinTextSize="10sp"
+            android:autoSizeMaxTextSize="28sp"
+            android:autoSizeStepGranularity="1sp" />
+
+        <FrameLayout
+            android:id="@+id/widget_btn_plus"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:layout_marginStart="6dp"
+            android:contentDescription="@string/counter_widget_plus_cd">
+            <ImageView
+                android:id="@+id/widget_plus_tint"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:src="@drawable/widget_material_pill"
+                android:scaleType="fitXY"
+                android:importantForAccessibility="no" />
+
+            <ImageView
+                android:id="@+id/widget_plus_icon"
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:src="@drawable/ic_widget_add"
+                android:layout_gravity="center"
+                android:importantForAccessibility="no" />
+        </FrameLayout>
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/widget_unconfigured_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:textSize="10sp"
+        android:includeFontPadding="false"
+        android:maxLines="1"
+        android:ellipsize="end"
+                android:singleLine="true"
+        android:gravity="center"
+        android:text="@string/counter_widget_configure_title"
+        android:textColor="@color/widget_text_primary"
+        android:visibility="gone" />
+</FrameLayout>

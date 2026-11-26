@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ic_launcher_background">#455052</color>
+    <color name="widget_surface">#F8FAF7</color>
+    <color name="widget_border">#DCE4DD</color>
+    <color name="widget_text_primary">#18201A</color>
+    <color name="widget_text_secondary">#5A665C</color>
+    <color name="widget_badge_bg">#E2EFE9</color>
+    <color name="widget_badge_text">#176B5B</color>
+    <color name="widget_btn_minus_bg">#E6ECE7</color>
+    <color name="widget_btn_minus_pressed">#D3DDD5</color>
+    <color name="widget_btn_minus_text">#1D261F</color>
+    <color name="widget_btn_plus_bg">#176B5B</color>
+    <color name="widget_btn_plus_pressed">#115447</color>
+    <color name="widget_btn_plus_text">#FFFFFF</color>
+</resources>
