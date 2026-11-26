@@ -4,16 +4,16 @@ plugins {
 }
 
 android {
-    namespace = "com.example.trackerhub"
+    namespace = "com.roinur.trackerhub"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.example.trackerhub"
+        applicationId = "com.roinur.trackerhub"
         minSdk = 26
         targetSdk = 34
         versionCode = 8
         versionName = "1.0"
-        testInstrumentationRunner = "com.example.trackerhub.WidgetLayoutCheck"
+        testInstrumentationRunner = "com.roinur.trackerhub.WidgetLayoutCheck"
     }
 
     signingConfigs {
