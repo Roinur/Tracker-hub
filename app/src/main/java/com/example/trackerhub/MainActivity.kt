@@ -261,7 +261,8 @@ private val trackerApps = listOf(
             "Hemskärmswidget",
             "Statistik och lokal säkerhetskopia"
         ),
-        apkSize = "8.8 MB"
+        apkSize = "8.8 MB",
+        githubUrl = "https://github.com/Roinur/Caffeine-tracker"
     )
 )
 
